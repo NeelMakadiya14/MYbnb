@@ -6,6 +6,8 @@ const cors = require("cors");
 const connectDB = require("./db.js");
 const morgan = require("morgan");
 const bodyParser = require("body-parser");
+const cron = require("node-cron");
+const moment = require("moment");
 
 //Allow CORS
 app.use(cors());
@@ -21,9 +23,145 @@ if (process.env.NODE_ENV === "Development") {
 }
 
 const Area = require("./Models/Area");
-const Listings = require("./Models/listings");
+const User = require("./Models/User");
+const Booking = require("./Models/Booking");
+const Listing = require("./Models/listings");
 
 connectDB();
+
+// parse application/x-www-form-urlencoded
+app.use(bodyParser.urlencoded({ extended: false }));
+// parse application/json
+app.use(bodyParser.json());
+
+//Run everyday at 11:30 PM and remove expired bookings from current bookings of listing collection
+cron.schedule("30 23 * * * ", () => {
+  console.log("Called....");
+  console.log(moment().utcOffset("+05:30"));
+  Listing.updateMany(
+    {},
+    {
+      $pull: {
+        current_bookings: { to: { $lt: moment().utcOffset("+05:30") } },
+      },
+    }
+  )
+    .then((res) => {
+      console.log(res);
+    })
+    .catch((err) => {
+      console.error(err);
+    });
+});
+
+//routes
+
+//........req.body for /booking looks like this
+// {
+//   "listing_id":"60532ce70de26448b919bd35",
+//   "total_price" : 950.5,
+//   "total_people" : 5,
+//   "stay" : {
+//       "from" : "2021-04-04",
+//       "to" : "2021-03-06"
+//   },
+//   "mobile_number" : 7048170498
+// }
+app.post("/booking", async (req, res) => {
+  const email = req.query.email;
+  await User.findOne({ email }, (err, user) => {
+    if (err) console.log(err);
+    user_id = user._id;
+    //  console.log(authorId);
+  });
+
+  const booking = { ...req.body, user_id };
+  console.log(booking);
+  await Booking.create(booking)
+    .then((res) => {
+      console.log(res);
+      bookingId = res._id;
+    })
+    .catch((err) => console.log(err));
+
+  const updatedListing = await Listing.updateOne(
+    { _id: req.body.listing_id },
+    {
+      $push: { current_bookings: { ...req.body.stay, bookingId } },
+    }
+  );
+  console.log(updatedListing);
+
+  const updatedUser = await User.updateOne(
+    { _id: user_id },
+    {
+      $push: { bookings: bookingId },
+    }
+  );
+  console.log(updatedUser);
+
+  res.sendStatus(200);
+});
+
+//......... req.body for /adduser looks like.............
+// {
+//   "name": "neel",
+//   "email" : "nmakadiya1@gmail.com",
+//   "GID" : "1234567abc"
+// }
+
+app.post("/adduser", async (req, res) => {
+  const user = { ...req.body, bookings: [] };
+  // console.log(req.body);
+  // console.log(user);
+  await User.create(user)
+    .then((response) => {
+      console.log(response);
+      res.sendStatus(200);
+    })
+    .catch((err) => {
+      console.error(err);
+    });
+});
+
+app.get("/available_house", async (req, res) => {
+  const checkIn = req.query.checkIn;
+  const checkOut = req.query.checkOut;
+  const location_name = req.query.location_name;
+  const guest = req.query.guest;
+
+  console.log(checkIn, checkOut);
+
+  const local_area = await Area.findOne({ name: location_name });
+
+  Listing.find(
+    {
+      current_bookings: {
+        $not: { $elemMatch: { from: { $lt: checkOut }, to: { $gt: checkIn } } },
+      },
+      "address.location": { $geoWithin: { $geometry: local_area.geometry } },
+      accommodates: { $gte: guest },
+    },
+    (err, info) => {
+      console.log(info.length);
+      console.error(err);
+      res.send(info.length);
+    }
+  );
+});
+
+app.get("/mybookings", async (req, res) => {
+  const email = req.query.email;
+  User.findOne({ email })
+    .populate("bookings")
+    .exec((err, user) => {
+      if (err) {
+        console.error(err);
+      }
+      console.log(user);
+      res.send(user);
+    });
+});
 
 /*************************************************************************************************************************************************************** ***/
 /*** TO LOAD DATA OF SAMPLE AIRBNB DB USING THE LOCATION OF SAMPLE RESTAURENT DB INTO OUR DB(MYBNB)   ***/

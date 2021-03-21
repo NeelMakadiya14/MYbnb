@@ -71,6 +71,15 @@ const listingSchema = new mongoose.Schema({
   cleaning_fee: {
     type: mongoose.Schema.Types.Decimal128,
   },
+  current_bookings: {
+    type: [
+      {
+        bookingId: { type: mongoose.Schema.Types.ObjectId, ref: "Bookings" },
+        from: Date,
+        to: Date,
+      },
+    ],
+  },
   images: {
     type: {
       thumbnail_url: String,
