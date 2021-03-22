@@ -112,6 +112,7 @@ app.post("/booking", async (req, res) => {
 
 app.post("/adduser", async (req, res) => {
   const user = { ...req.body, bookings: [] };
+  console.log(user);
   // console.log(req.body);
   // console.log(user);
   await User.create(user)
