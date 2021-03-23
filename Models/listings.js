@@ -60,17 +60,18 @@ const listingSchema = new mongoose.Schema({
     type: Number,
   },
   bathrooms: {
-    type: mongoose.Schema.Types.Decimal128,
+    type: Number,
   },
   amenities: {
     type: [String],
   },
   price: {
-    type: mongoose.Schema.Types.Decimal128,
+    type: Number,
   },
   cleaning_fee: {
-    type: mongoose.Schema.Types.Decimal128,
+    type: Number,
   },
+  // mongoose.Schema.Types.Decimal128
   current_bookings: {
     type: [
       {
@@ -111,7 +112,7 @@ const listingSchema = new mongoose.Schema({
       country_code: String,
       location: {
         type: String,
-        coordinates: [mongoose.Schema.Types.Decimal128],
+        coordinates: [Number],
         is_location_exact: Boolean,
       },
     },

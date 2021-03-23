@@ -111,18 +111,32 @@ app.post("/booking", async (req, res) => {
 // }
 
 app.post("/adduser", async (req, res) => {
-  const user = { ...req.body, bookings: [] };
-  console.log(user);
+  const newUser = { ...req.body, bookings: [] };
+  //console.log(user);
   // console.log(req.body);
   // console.log(user);
-  await User.create(user)
-    .then((response) => {
-      console.log(response);
-      res.sendStatus(200);
-    })
-    .catch((err) => {
-      console.error(err);
-    });
+  const email = req.body.email;
+  User.find({ email }, (err, user) => {
+    console.log(err);
+    // console.log(user);
+    console.log(user.length);
+
+    if (user.length > 0) {
+      console.log("user : ", user.length);
+      res.send("Already Added");
+    } else {
+      console.log("not");
+      User.create(user)
+        .then((response) => {
+          console.log(response);
+        })
+        .catch((err) => {
+          console.error(err);
+        });
+
+      res.send("success");
+    }
+  });
 });
 
 app.get("/available_house", async (req, res) => {
@@ -146,9 +160,21 @@ app.get("/available_house", async (req, res) => {
     (err, info) => {
       console.log(info.length);
       console.error(err);
-      res.send(info.length);
+      res.send(info);
     }
   );
+});
+
+app.get("/getdetails", async (req, res) => {
+  const _id = req.query._id;
+
+  Listing.findOne({ _id }, (err, info) => {
+    if (err) {
+      console.error(err);
+    }
+    console.log(info);
+    res.send(info);
+  });
 });
 
 app.get("/mybookings", async (req, res) => {
