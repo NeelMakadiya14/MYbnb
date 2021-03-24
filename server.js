@@ -95,7 +95,9 @@ app.post("/booking", async (req, res) => {
   const updatedUser = await User.updateOne(
     { _id: user_id },
     {
-      $push: { bookings: bookingId },
+      $push: {
+        bookings: { bookingsID: bookingId, listingID: req.body.listing_id },
+      },
     }
   );
   console.log(updatedUser);
@@ -180,7 +182,8 @@ app.get("/getdetails", async (req, res) => {
 app.get("/mybookings", async (req, res) => {
   const email = req.query.email;
   User.findOne({ email })
-    .populate("bookings")
+    .populate("bookings.bookingsID")
+    .populate("bookings.listingID")
     .exec((err, user) => {
       if (err) {
         console.error(err);
