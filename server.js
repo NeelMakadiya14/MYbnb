@@ -141,6 +141,19 @@ app.post("/adduser", async (req, res) => {
   });
 });
 
+app.get("/location_list", async (req, res) => {
+  const name = req.query.name;
+  console.log(name);
+  Area.find({ $text: { $search: name } }, { score: { $meta: "textScore" } })
+    .sort({ score: { $meta: "textScore" } })
+    .then((list) => {
+      res.send(list);
+    })
+    .catch((err) => {
+      console.log(err);
+    });
+});
+
 app.get("/available_house", async (req, res) => {
   const checkIn = req.query.checkIn;
   const checkOut = req.query.checkOut;
@@ -153,10 +166,10 @@ app.get("/available_house", async (req, res) => {
 
   Listing.find(
     {
+      "address.location": { $geoWithin: { $geometry: local_area.geometry } },
       current_bookings: {
         $not: { $elemMatch: { from: { $lt: checkOut }, to: { $gt: checkIn } } },
       },
-      "address.location": { $geoWithin: { $geometry: local_area.geometry } },
       accommodates: { $gte: guest },
     },
     (err, info) => {
