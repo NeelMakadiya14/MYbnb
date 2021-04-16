@@ -67,6 +67,27 @@ cron.schedule("30 23 * * * ", () => {
 //   },
 //   "mobile_number" : 7048170498
 // }
+
+// app.get("/call", async (req, response) => {
+//   console.log("Called....");
+//   console.log(moment().utcOffset("+05:30"));
+//   Listing.updateMany(
+//     {},
+//     {
+//       $pull: {
+//         current_bookings: { to: { $lt: moment().utcOffset("+05:30") } },
+//       },
+//     }
+//   )
+//     .then((res) => {
+//       console.log(res);
+//       response.send(res);
+//     })
+//     .catch((err) => {
+//       console.error(err);
+//     });
+// });
+
 app.post("/booking", async (req, res) => {
   const email = req.query.email;
   await User.findOne({ email }, (err, user) => {
@@ -128,7 +149,7 @@ app.post("/adduser", async (req, res) => {
       res.send("Already Added");
     } else {
       console.log("not");
-      User.create(user)
+      User.create(newUser)
         .then((response) => {
           console.log(response);
         })
