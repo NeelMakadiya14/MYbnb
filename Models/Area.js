@@ -7,6 +7,7 @@ const areaSchema = new mongoose.Schema({
   },
   geometry: {
     type: {
+      type: String,
       coordinates: {
         type: [[[Number]]],
       },

@@ -154,6 +154,13 @@ app.get("/location_list", async (req, res) => {
     });
 });
 
+// {
+//   "address.location": "2dsphere",
+//   "current_bookings.from": 1,
+//   "current_bookings.to": -1,
+//   "accommodates": -1
+// }
+
 app.get("/available_house", async (req, res) => {
   const checkIn = req.query.checkIn;
   const checkOut = req.query.checkOut;
